@@ -6,11 +6,10 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
     libglib2.0-0 \
-    libjpeg-turbo \
-    libpng16-16 \
-    libwebp-dev \
+    libjpeg62-turbo \
+    zlib1g \
+    libwebp6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -25,15 +24,9 @@ COPY models/ ./models/
 # Copy the application code
 COPY main.py .
 
-# Expose port (Render sets $PORT)
-ARG PORT=8000
-ENV PORT=$PORT
-EXPOSE $PORT
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:${PORT}/health')"
+# Expose port
+EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${PORT}"]
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
 
